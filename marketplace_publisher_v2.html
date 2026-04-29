@@ -548,7 +548,8 @@ const HMAP = {
   precio:          ['precio','price'],
   sku:             ['sku','código','codigo','code'],
   stock:           ['stock','unidades'],
-  descripcion:     ['descripcion','descripción','description','descripción corta','caracteristicas','características','desc'],
+  descripcion:     ['descripcion','descripción','description','descripción corta','desc'],
+  caracteristicas: ['caracteristicas','características','característica','caracteristicas','caract'],
   fotos:           ['fotos','foto','imagen','image','images','photos'],
   url:             ['url','link','enlace'],
   precio_venta:    ['precio_venta','precio venta'],
@@ -666,6 +667,7 @@ function render(idx) {
   const sku      = getCol(row, 'sku');
   const stock    = getCol(row, 'stock');
   const desc     = getCol(row, 'descripcion');
+  const caract   = getCol(row, 'caracteristicas');
   const fotosRaw = getCol(row, 'fotos');
   const prodUrl  = getCol(row, 'url');
 
@@ -735,6 +737,14 @@ function render(idx) {
       show: !!desc
     },
     {
+      id: 'f_caract',
+      label: 'CARACTERÍSTICAS',
+      dot: '',
+      value: caract,
+      cls: '',
+      show: !!caract
+    },
+    {
       id: 'f_palabras',
       label: 'PALABRAS CLAVE',
       dot: 'yellow',
@@ -764,7 +774,7 @@ function fieldCard({ id, label, dot, value, cls }) {
     <div class="field-card" id="card_${id}">
       <div class="field-head">
         <span class="field-label">${dotHtml} ${label}</span>
-        <button class="btn-copy" id="btn_${id}" onclick="copyField('${id}', ${JSON.stringify(value)})">
+        <button class="btn-copy" id="btn_${id}" onclick="copyField('${id}')">
           <span class="icon">⊡</span> COPIAR
         </button>
       </div>
@@ -773,10 +783,13 @@ function fieldCard({ id, label, dot, value, cls }) {
 }
 
 // ─── COPY ────────────────────────────────────────
-function copyField(id, value) {
-  navigator.clipboard.writeText(value).then(() => {
-    const btn  = document.getElementById('btn_' + id);
-    const card = document.getElementById('card_' + id);
+function copyField(id) {
+  const card = document.getElementById('card_' + id);
+  const body = card.querySelector('.field-body');
+  const text = body.textContent.trim();
+  
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn_' + id);
     if (!btn) return;
     btn.innerHTML = '<span class="icon">✓</span> COPIADO';
     btn.classList.add('ok');
@@ -787,6 +800,8 @@ function copyField(id, value) {
       btn.classList.remove('ok');
       card.classList.remove('copied-flash');
     }, 2000);
+  }).catch(err => {
+    console.error('Error al copiar:', err);
   });
 }
 
