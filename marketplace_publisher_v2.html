@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DigiCorp → Marketplace Publisher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0d12;
+    --surface:  #111720;
+    --panel:    #161d28;
+    --border:   #1e2d3d;
+    --accent:   #00c9ff;
+    --accent2:  #00ff9d;
+    --warn:     #ffaa00;
+    --text:     #c9d8e8;
+    --muted:    #4a6785;
+    --danger:   #ff4d6a;
+    --mono:     'Space Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ─── TOPBAR ─────────────────────────────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .logo span { color: var(--muted); }
+
+  .url-wrap {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    align-items: center;
+  }
+  .url-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .url-input:focus { border-color: var(--accent); }
+  .url-input::placeholder { color: var(--muted); }
+
+  .btn-load {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-load:hover { opacity: 0.85; }
+  .btn-load:active { transform: scale(0.97); }
+
+  .nav-cluster {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+  }
+  .nav-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-counter {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 70px;
+    text-align: center;
+  }
+  .nav-counter strong { color: var(--accent); }
+
+  .storage-btns {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .btn-storage {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-storage:hover { border-color: var(--warn); color: var(--warn); }
+  .btn-storage.ok { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ─── LAYOUT ─────────────────────────────── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ─── IMAGE PANEL ────────────────────────── */
+  .img-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+  .img-panel::-webkit-scrollbar { width: 4px; }
+  .img-panel::-webkit-scrollbar-track { background: transparent; }
+  .img-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .prod-img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    object-fit: contain;
+    aspect-ratio: 1;
+    cursor: zoom-in;
+    transition: border-color 0.2s;
+  }
+  .prod-img:hover { border-color: var(--accent); }
+  .img-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--panel);
+    border-radius: 10px;
+    border: 2px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 11px;
+    gap: 8px;
+  }
+  .img-placeholder svg { opacity: 0.3; }
+
+  .img-meta {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    line-height: 1.8;
+    border: 1px solid var(--border);
+  }
+  .img-meta strong { color: var(--text); }
+  .meta-row { display: flex; justify-content: space-between; }
+  .meta-val { color: var(--accent2); }
+
+  /* ─── FIELDS PANEL ───────────────────────── */
+  .fields-panel {
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fields-panel::-webkit-scrollbar { width: 4px; }
+  .fields-panel::-webkit-scrollbar-track { background: transparent; }
+  .fields-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ─── FIELD CARD ─────────────────────────── */
+  .field-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .field-card:hover { border-color: #2a3d52; }
+  .field-card.copied-flash { border-color: var(--accent2); }
+
+  .field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    background: rgba(0,0,0,0.25);
+    border-bottom: 1px solid var(--border);
+  }
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-label-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .field-label-dot.green  { background: var(--accent2); }
+  .field-label-dot.yellow { background: var(--warn); }
+  .field-label-dot.red    { background: var(--danger); }
+
+  .btn-copy {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 5px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .btn-copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn-copy.ok {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(0,255,157,0.06);
+  }
+  .btn-copy .icon { font-size: 12px; }
+
+  .field-body {
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text);
+    max-height: 140px;
+    overflow-y: auto;
+    word-break: break-word;
+  }
+  .field-body::-webkit-scrollbar { width: 3px; }
+  .field-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .field-body.f-name {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .field-body.f-price {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .field-body.f-hash {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #7eb8ff;
+    line-height: 1.8;
+  }
+  .field-body.f-keys { font-size: 12px; color: var(--warn); }
+
+  /* ─── EMPTY / LOADING STATES ─────────────── */
+  .state-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 14px;
+    color: var(--muted);
+    text-align: center;
+    padding: 40px;
+  }
+  .state-center h2 { color: var(--text); font-size: 16px; font-family: var(--mono); }
+  .state-center p { font-size: 13px; line-height: 1.6; max-width: 340px; }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── STATUSBAR ──────────────────────────── */
+  .statusbar {
+    height: 28px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 20px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .statusbar .s-ok   { color: var(--accent2); }
+  .statusbar .s-warn { color: var(--warn); }
+  .statusbar .s-tip  { margin-left: auto; }
+
+  /* ─── ZOOM OVERLAY ───────────────────────── */
+  .zoom-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+  .zoom-overlay.active { display: flex; }
+  .zoom-overlay img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  /* ─── PROGRESS BAR ───────────────────────── */
+  .progress-track {
+    height: 2px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.3s;
+  }
+
+  /* ─── MODAL ───────────────────────────── */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 480px;
+    width: 90%;
+  }
+  .modal-content h2 {
+    font-family: var(--mono);
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .modal-content p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  .modal-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-btn.primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .modal-btn.primary:hover { opacity: 0.85; }
+  .modal-btn.secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .modal-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ZOOM OVERLAY -->
+<div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom()">
+  <img id="zoomImg" src="" alt="">
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2 id="modalTitle">Modal</h2>
+    <p id="modalText">Texto</p>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="modalCancel">Cancelar</button>
+      <button class="modal-btn primary" id="modalConfirm">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">DIGICORP<span> › </span>MP</div>
+
+  <div class="url-wrap">
+    <input class="url-input" id="sheetUrl"
+      placeholder="URL CSV de Google Sheet (publicado como CSV) o URL normal del sheet..."
+      type="text">
+    <button class="btn-load" onclick="loadSheet()">▶ CARGAR</button>
+  </div>
+
+  <div class="nav-cluster">
+    <button class="nav-btn" id="btnPrev" onclick="goTo(currentIdx - 1)" disabled>← PREV</button>
+    <span class="nav-counter" id="navCounter"><strong>-</strong></span>
+    <button class="nav-btn" id="btnNext" onclick="goTo(currentIdx + 1)" disabled>NEXT →</button>
+  </div>
+
+  <div class="storage-btns">
+    <button class="btn-storage" id="btnExport" onclick="exportData()" title="Guardar datos localmente">💾 GUARDAR</button>
+    <button class="btn-storage" id="btnImport" onclick="importData()" title="Cargar datos guardados">📂 CARGAR</button>
+  </div>
+</div>
+
+<div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+  <!-- IMAGE PANEL -->
+  <div class="img-panel" id="imgPanel">
+    <div class="img-placeholder">
+      <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      Sin imagen
+    </div>
+  </div>
+
+  <!-- FIELDS PANEL -->
+  <div class="fields-panel" id="fieldsPanel">
+    <div class="state-center">
+      <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:#1e2d3d">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+      </svg>
+      <h2>MARKETPLACE PUBLISHER</h2>
+      <p style="margin-bottom: 12px;">
+        <strong>Opción 1 — Cargar desde Google Sheet</strong><br>
+        Pega la URL del sheet <strong>publicado como CSV</strong> y presiona <strong>CARGAR</strong>.
+      </p>
+      <p>
+        <strong>Opción 2 — Usar datos guardados</strong><br>
+        Si ya has usado esta herramienta antes, presiona <strong>📂 CARGAR</strong> para restaurar tus productos.
+      </p>
+      <p style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:12px;">
+        ← → flechas del teclado | C copiar nombre
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- STATUSBAR -->
+<div class="statusbar">
+  <span id="statusMsg">Listo · Esperando datos</span>
+  <span class="s-tip" id="statusTip">💾 Después de cargar, presiona GUARDAR para guardar localmente</span>
+</div>
+
+<script>
+// ─── STATE ──────────────────────────────────────
+let products = [];
+let headers  = [];
+let currentIdx = 0;
+let copyTimers = {};
+
+// ─── COLUMN MAP ─
+const HMAP = {
+  nombre:          ['nombre','name','producto'],
+  marca:           ['marca','brand'],
+  precio:          ['precio','price'],
+  sku:             ['sku','código','codigo','code'],
+  stock:           ['stock','unidades'],
+  descripcion:     ['descripcion','descripción','description','descripción corta','caracteristicas','características','desc'],
+  fotos:           ['fotos','foto','imagen','image','images','photos'],
+  url:             ['url','link','enlace'],
+  precio_venta:    ['precio_venta','precio venta'],
+  nombre_producto: ['nombre_producto','nombre producto'],
+  palabras_claves: ['palabras_claves','palabras claves','keywords','palabras clave'],
+  hashtags:        ['hashtags','hashtag','tags']
+};
+
+let COLS = {};
+
+function detectCols(hdrs) {
+  COLS = {};
+  hdrs.forEach((h, i) => {
+    const l = h.toLowerCase().trim();
+    for (const [key, names] of Object.entries(HMAP)) {
+      if (COLS[key] !== undefined) continue;
+      if (names.some(n => l.includes(n))) COLS[key] = i;
+    }
+  });
+}
+
+function getCol(row, key) {
+  const i = COLS[key];
+  return (i !== undefined && row[i] !== undefined) ? String(row[i]).trim() : '';
+}
+
+// ─── CSV PARSER ──────────────────────────────────
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], n = text[i+1];
+    if (inQ) {
+      if (c === '"' && n === '"') { field += '"'; i++; }
+      else if (c === '"') { inQ = false; }
+      else field += c;
+    } else {
+      if (c === '"') { inQ = true; }
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || (c === '\r' && n === '\n')) {
+        row.push(field); field = '';
+        if (row.some(v => v)) rows.push(row);
+        row = [];
+        if (c === '\r') i++;
+      } else if (c === '\r') {
+        row.push(field); field = '';
+        if (row.some(v => v)) rows.push(row);
+        row = [];
+      } else field += c;
+    }
+  }
+  if (row.length) { row.push(field); if (row.some(v => v)) rows.push(row); }
+  return rows;
+}
+
+// ─── URL → CSV ───────────────────────────────────
+function toCsvUrl(raw) {
+  raw = raw.trim();
+  if (raw.includes('output=csv') || raw.includes('format=csv') || raw.includes('tqx=out:csv')) return raw;
+  const m = raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
+  return raw;
+}
+
+// ─── LOAD SHEET ──────────────────────────────────
+async function loadSheet() {
+  const rawUrl = document.getElementById('sheetUrl').value;
+  if (!rawUrl.trim()) { setStatus('⚠ Pega primero la URL', 'warn'); return; }
+
+  localStorage.setItem('mp_sheet_url', rawUrl);
+  const csvUrl = toCsvUrl(rawUrl);
+
+  setStatus('Conectando al sheet…');
+  setFields(`<div class="state-center"><div class="spinner"></div><p>Cargando productos…</p></div>`);
+
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status} — ¿El sheet está publicado?`);
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    if (rows.length < 2) throw new Error('El sheet no tiene datos.');
+
+    headers = rows[0];
+    detectCols(headers);
+    products = rows.slice(1);
+    currentIdx = 0;
+
+    render(currentIdx);
+    setStatus(`✓ ${products.length} productos cargados`, 'ok');
+  } catch(e) {
+    setFields(`<div class="state-center"><h2 style="color:var(--danger)">❌ Error</h2><p>${e.message}</p>
+      <p style="font-size:11px;margin-top:8px;">
+        <strong>Soluciones:</strong><br>1. Ve a tu Google Sheet<br>2. Archivo → Compartir → <strong>Publicar en la web</strong><br>
+        3. Hoja 1 → Formato: <strong>CSV</strong> → Publicar<br>4. Copia ese enlace y pégalo arriba
+      </p></div>`);
+    setStatus('Error al cargar', 'warn');
+  }
+}
+
+// ─── RENDER PRODUCT ──────────────────────────────
+function render(idx) {
+  if (!products.length) return;
+  const row = products[idx];
+
+  document.getElementById('navCounter').innerHTML =
+    `<strong>${idx + 1}</strong> / ${products.length}`;
+  document.getElementById('btnPrev').disabled = idx === 0;
+  document.getElementById('btnNext').disabled = idx === products.length - 1;
+  document.getElementById('progressFill').style.width =
+    ((idx + 1) / products.length * 100) + '%';
+
+  const nombre   = getCol(row, 'nombre');
+  const marca    = getCol(row, 'marca');
+  const sku      = getCol(row, 'sku');
+  const stock    = getCol(row, 'stock');
+  const desc     = getCol(row, 'descripcion');
+  const fotosRaw = getCol(row, 'fotos');
+  const prodUrl  = getCol(row, 'url');
+
+  const nombreProducto = getCol(row, 'nombre_producto') ||
+    [nombre, marca, sku].filter(Boolean).join(' - ');
+
+  let precioVenta = getCol(row, 'precio_venta');
+  if (!precioVenta) {
+    const raw = getCol(row, 'precio');
+    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
+    precioVenta = num ? Math.round(num * 1.3) + ' Bs' : '—';
+  }
+
+  const palabras = getCol(row, 'palabras_claves');
+  const hashtags = getCol(row, 'hashtags');
+
+  const imgs = fotosRaw
+    ? fotosRaw.split(/[,|;]/).map(s => s.trim()).filter(Boolean)
+    : [];
+
+  const imgHtml = imgs.length
+    ? imgs.map(src =>
+        `<img class="prod-img" src="${esc(src)}" alt="producto"
+          onclick="openZoom('${esc(src)}')"
+          onerror="this.style.display='none'">`
+      ).join('')
+    : `<div class="img-placeholder">
+        <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>Sin imagen</div>`;
+
+  document.getElementById('imgPanel').innerHTML =
+    imgHtml +
+    `<div class="img-meta">
+      <div class="meta-row"><span>SKU</span><span class="meta-val">${esc(sku) || '—'}</span></div>
+      <div class="meta-row"><span>Marca</span><span class="meta-val">${esc(marca) || '—'}</span></div>
+      <div class="meta-row"><span>Stock</span><span class="meta-val">${esc(stock) || '—'}</span></div>
+      ${prodUrl ? `<div class="meta-row" style="margin-top:6px">
+        <a href="${esc(prodUrl)}" target="_blank" style="color:var(--accent);font-size:10px;text-decoration:none">↗ Ver en DigiCorp</a>
+      </div>` : ''}
+    </div>`;
+
+  const fields = [
+    {
+      id: 'f_nombre',
+      label: 'NOMBRE DEL PRODUCTO',
+      dot: '',
+      value: nombreProducto,
+      cls: 'f-name',
+      show: !!nombreProducto
+    },
+    {
+      id: 'f_precio',
+      label: 'PRECIO DE VENTA',
+      dot: 'green',
+      value: precioVenta,
+      cls: 'f-price',
+      show: !!precioVenta && precioVenta !== '—'
+    },
+    {
+      id: 'f_desc',
+      label: 'DESCRIPCIÓN',
+      dot: '',
+      value: desc,
+      cls: '',
+      show: !!desc
+    },
+    {
+      id: 'f_palabras',
+      label: 'PALABRAS CLAVE',
+      dot: 'yellow',
+      value: palabras,
+      cls: 'f-keys',
+      show: !!palabras
+    },
+    {
+      id: 'f_hashtags',
+      label: 'HASHTAGS',
+      dot: 'red',
+      value: hashtags,
+      cls: 'f-hash',
+      show: !!hashtags
+    }
+  ].filter(f => f.show);
+
+  setFields(fields.map(f => fieldCard(f)).join(''));
+  setStatus(`SKU: ${sku || '—'} · ${nombre} ${marca}`.trim(), 'ok');
+}
+
+function fieldCard({ id, label, dot, value, cls }) {
+  const dotHtml = dot
+    ? `<span class="field-label-dot ${dot}"></span>`
+    : `<span class="field-label-dot"></span>`;
+  return `
+    <div class="field-card" id="card_${id}">
+      <div class="field-head">
+        <span class="field-label">${dotHtml} ${label}</span>
+        <button class="btn-copy" id="btn_${id}" onclick="copyField('${id}', ${JSON.stringify(value)})">
+          <span class="icon">⊡</span> COPIAR
+        </button>
+      </div>
+      <div class="field-body ${cls}">${esc(value)}</div>
+    </div>`;
+}
+
+// ─── COPY ────────────────────────────────────────
+function copyField(id, value) {
+  navigator.clipboard.writeText(value).then(() => {
+    const btn  = document.getElementById('btn_' + id);
+    const card = document.getElementById('card_' + id);
+    if (!btn) return;
+    btn.innerHTML = '<span class="icon">✓</span> COPIADO';
+    btn.classList.add('ok');
+    card.classList.add('copied-flash');
+    clearTimeout(copyTimers[id]);
+    copyTimers[id] = setTimeout(() => {
+      btn.innerHTML = '<span class="icon">⊡</span> COPIAR';
+      btn.classList.remove('ok');
+      card.classList.remove('copied-flash');
+    }, 2000);
+  });
+}
+
+// ─── NAVIGATE ────────────────────────────────────
+function goTo(idx) {
+  if (idx < 0 || idx >= products.length) return;
+  currentIdx = idx;
+  render(currentIdx);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') goTo(currentIdx + 1);
+  if (e.key === 'ArrowLeft')  goTo(currentIdx - 1);
+  if (e.key === 'c' || e.key === 'C') {
+    const btn = document.getElementById('btn_f_nombre');
+    if (btn) btn.click();
+  }
+});
+
+// ─── ZOOM ────────────────────────────────────────
+function openZoom(src) {
+  document.getElementById('zoomImg').src = src;
+  document.getElementById('zoomOverlay').classList.add('active');
+}
+function closeZoom() {
+  document.getElementById('zoomOverlay').classList.remove('active');
+}
+
+// ─── EXPORT DATA ─────────────────────────────────
+function exportData() {
+  if (!products.length) {
+    setStatus('⚠ No hay productos para guardar', 'warn');
+    return;
+  }
+
+  const data = {
+    headers: headers,
+    products: products,
+    timestamp: new Date().toISOString()
+  };
+
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `digicorp-marketplace-${Date.now()}.json`;
+  a.click();
+
+  // También guardar en localStorage
+  localStorage.setItem('mp_cached_data', json);
+
+  setStatus('✓ Datos guardados localmente y descargados', 'ok');
+  document.getElementById('btnExport').classList.add('ok');
+  setTimeout(() => {
+    document.getElementById('btnExport').classList.remove('ok');
+  }, 2000);
+}
+
+// ─── IMPORT DATA ─────────────────────────────────
+function importData() {
+  const cached = localStorage.getItem('mp_cached_data');
+  if (!cached) {
+    setStatus('❌ No hay datos guardados', 'warn');
+    return;
+  }
+
+  try {
+    const data = JSON.parse(cached);
+    headers = data.headers;
+    products = data.products;
+    detectCols(headers);
+    currentIdx = 0;
+
+    render(currentIdx);
+    setStatus(`✓ ${products.length} productos restaurados desde cache local`, 'ok');
+    document.getElementById('btnImport').classList.add('ok');
+    setTimeout(() => {
+      document.getElementById('btnImport').classList.remove('ok');
+    }, 2000);
+  } catch(e) {
+    setStatus('❌ Error al cargar datos guardados', 'warn');
+  }
+}
+
+// ─── MODAL ───────────────────────────────────────
+function showModal(title, text, onConfirm) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalConfirm').onclick = () => {
+    closeModal();
+    onConfirm && onConfirm();
+  };
+  document.getElementById('modalCancel').onclick = closeModal;
+  document.getElementById('modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+// ─── HELPERS ─────────────────────────────────────
+function setFields(html) { document.getElementById('fieldsPanel').innerHTML = html; }
+function setStatus(msg, cls) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = cls === 'ok' ? 's-ok' : cls === 'warn' ? 's-warn' : '';
+}
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ─── RESTORE SAVED URL ───────────────────────────
+const savedUrl = localStorage.getItem('mp_sheet_url');
+if (savedUrl) document.getElementById('sheetUrl').value = savedUrl;
+
+document.getElementById('sheetUrl').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadSheet();
+});
+
+// Check for cached data
+const cached = localStorage.getItem('mp_cached_data');
+if (cached) {
+  setStatus('💾 Tienes datos guardados · Presiona 📂 CARGAR para restaurar', 'ok');
+}
+</script>
+</body>
+</html>
